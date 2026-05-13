@@ -1,137 +1,220 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>About</title>
 
-
-
   <style>
-
-    body {
+    * {
       margin: 0;
-      background: black;
-      color: white;
-      font-family: Arial, sans-serif;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    /* ===== 選單 ===== */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: #000;
+      color: white;
+      font-family: Arial, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ===== 導覽列 ===== */
 
     nav {
       position: fixed;
       top: 0;
       width: 100%;
 
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(10px);
-
-      padding: 20px;
-
       display: flex;
       justify-content: center;
       gap: 40px;
 
-      z-index: 1000;
+      padding: 22px;
+
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(12px);
+
+      z-index: 999;
     }
 
     nav a {
       color: white;
       text-decoration: none;
-      font-size: 18px;
+      font-size: 15px;
+      letter-spacing: 2px;
 
       transition: 0.3s;
     }
 
     nav a:hover {
       color: cyan;
+      text-shadow: 0 0 10px cyan;
     }
 
-    /* ===== 標題 ===== */
+    /* ===== About ===== */
 
-    .title {
+    .hero {
+      padding-top: 160px;
       text-align: center;
-      padding-top: 120px;
-      padding-bottom: 40px;
+      padding-bottom: 100px;
     }
 
-    .title h1 {
-      font-size: 60px;
-      margin: 0;
+    .hero h1 {
+      font-size: 72px;
+      margin-bottom: 20px;
+
+      letter-spacing: 5px;
     }
 
-    .title p {
-      color: gray;
-      margin-top: 10px;
+    .hero p {
+      color: #aaa;
+      font-size: 18px;
+      letter-spacing: 2px;
     }
 
-    /* ===== Gallery ===== */
+    /* ===== 圖片區 ===== */
 
     .gallery {
-      padding: 40px;
+      width: 100%;
 
-      display: grid;
+      display: flex;
+      flex-direction: column;
+      gap: 120px;
 
-      grid-template-columns: repeat(3, 1fr);
-
-      gap: 20px;
+      padding-bottom: 120px;
     }
 
-    .gallery img {
-      width: 180%;
-      height: 400px;
+    .card {
+      width: 100%;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      gap: 60px;
+
+      padding: 0 8%;
+    }
+
+    /* 偶數反轉 */
+
+    .card:nth-child(even) {
+      flex-direction: row-reverse;
+    }
+
+    .card img {
+      width: 55%;
+      max-width: 850px;
+
+      border-radius: 28px;
 
       object-fit: cover;
 
-      border-radius: 20px;
-
-      transition:
-        transform 0.3s ease,
-        box-shadow 0.3s ease;
+      transition: 0.5s ease;
 
       cursor: pointer;
+
+      box-shadow:
+        0 0 20px rgba(255,255,255,0.08);
     }
 
-    /* 滑鼠停留 0.5 秒後放大 */
+    .card img:hover {
+      transform: scale(1.03);
 
-    .gallery img:hover {
-      transform: scale(1.08);
+      box-shadow:
+        0 0 30px cyan,
+        0 0 60px rgba(0,255,255,0.3);
+    }
 
-      transition-delay: 0.5s;
+    /* 文字 */
 
-      box-shadow: 0 0 30px cyan;
+    .text {
+      width: 30%;
+    }
+
+    .text h2 {
+      font-size: 42px;
+      margin-bottom: 20px;
+    }
+
+    .text p {
+      color: #aaa;
+      line-height: 1.8;
+      font-size: 17px;
+    }
+
+    /* ===== Lightbox ===== */
+
+    .lightbox {
+      position: fixed;
+
+      top: 0;
+      left: 0;
+
+      width: 100%;
+      height: 100%;
+
+      background: rgba(0,0,0,0.9);
+
+      display: none;
+
+      justify-content: center;
+      align-items: center;
+
+      z-index: 5000;
+    }
+
+    .lightbox img {
+      width: 85%;
+      max-width: 1200px;
+
+      border-radius: 20px;
+    }
+
+    .lightbox.active {
+      display: flex;
     }
 
     /* ===== 手機版 ===== */
 
     @media (max-width: 900px) {
 
-      .gallery {
-        grid-template-columns: repeat(2, 1fr);
+      .hero h1 {
+        font-size: 50px;
+      }
+
+      .card,
+      .card:nth-child(even) {
+        flex-direction: column;
+      }
+
+      .card img {
+        width: 100%;
+      }
+
+      .text {
+        width: 100%;
+        text-align: center;
+      }
+
+      .text h2 {
+        font-size: 32px;
       }
 
     }
-
-    @media (max-width: 600px) {
-
-      .gallery {
-        grid-template-columns: 1fr;
-      }
-
-      .title h1 {
-        font-size: 40px;
-      }
-
-    }
-
   </style>
-
 </head>
 
 <body>
 
-  <h1>About Me</h1>
-  <p>我是 NIAR</p>
+  <!-- ===== 導覽列 ===== -->
 
   <nav>
     <a href="index.html">HOME</a>
@@ -140,10 +223,71 @@
     <a href="contact.html">CONTACT</a>
   </nav>
 
-  <section class="gallery">
-    <img src="image/about.PNG">
-    <img src="image/fish.png">
+  <!-- ===== 標題 ===== -->
+
+  <section class="hero">
+    <h1>ABOUT ME</h1>
+    <p>Photography / Daily Life / Visual Story</p>
   </section>
 
+  <!-- ===== Gallery ===== -->
+
+  <section class="gallery">
+
+    <div class="card">
+
+      <img src="image/about.PNG" onclick="openLightbox(this.src)">
+
+      <div class="text">
+        <h2>NIAR</h2>
+
+        <p>
+          喜歡攝影、街頭紀錄與生活感畫面。<br>
+          專注於日常、氛圍與真實瞬間。
+        </p>
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <img src="image/fish.png" onclick="openLightbox(this.src)">
+
+      <div class="text">
+        <h2>Aquarium</h2>
+
+        <p>
+          光影、藍色空間與朦朧感。<br>
+          喜歡用照片紀錄安靜的情緒。
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ===== 點圖放大 ===== -->
+
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <img id="lightbox-img">
+  </div>
+
+  <script>
+
+    function openLightbox(src) {
+
+      document.getElementById("lightbox").classList.add("active");
+
+      document.getElementById("lightbox-img").src = src;
+    }
+
+    function closeLightbox() {
+
+      document.getElementById("lightbox").classList.remove("active");
+    }
+
+  </script>
+
 </body>
+
 </html>
