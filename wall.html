@@ -210,20 +210,6 @@
     const closeButton = document.querySelector(".close");
     const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif"];
     const imageFolderApi = "https://api.github.com/repos/rainzhu/rainzhu.github.io/contents/image";
-    const fallbackPhotos = [
-      "image/bg_photo.PNG",
-      "image/japan1.png",
-      "image/japan2.png",
-      "image/japan3.png",
-      "image/un_1.png",
-      "image/un_2.png",
-      "image/un_3.png",
-      "image/about.PNG",
-      "image/fish.png",
-      "image/TMR.png",
-      "image/outside.png",
-      "image/uni_t.png"
-    ];
 
     function photoNameFromPath(path) {
       return path
@@ -256,17 +242,17 @@
       wall.innerHTML = "";
 
       photos.forEach(photo => {
-        const src = typeof photo === "string" ? photo : photo.download_url;
-        const name = typeof photo === "string" ? photoNameFromPath(photo) : photoNameFromPath(photo.name);
+        const src = photo.download_url;
+        const name = photoNameFromPath(photo.name);
         wall.appendChild(createPhoto(src, name));
       });
     }
 
-    function loadFallbackPhotos() {
-      renderPhotos(fallbackPhotos);
+    function showLoadError() {
+      wall.innerHTML = '<p class="loading">Photos could not be loaded. Please refresh later.</p>';
     }
 
-    fetch(imageFolderApi)
+    fetch(`${imageFolderApi}?t=${Date.now()}`, { cache: "no-store" })
       .then(response => response.json())
       .then(files => {
         const photos = files
@@ -277,10 +263,10 @@
         if (photos.length > 0) {
           renderPhotos(photos);
         } else {
-          loadFallbackPhotos();
+          showLoadError();
         }
       })
-      .catch(loadFallbackPhotos);
+      .catch(showLoadError);
 
     function closeLightbox() {
       lightbox.classList.remove("open");
