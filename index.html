@@ -16,15 +16,6 @@
     }
   </script> -->
 
-  <!-- <script>
-    fetch('https://api.countapi.xyz/hit/niar-portfolio/visits')
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById('visitor-count').innerText =
-          `訪客數: ${data.value}`;
-      })
-  </script> -->
-
   <style>
     body {
       margin: 0;
@@ -55,6 +46,18 @@
       font-size: 20px;
     }
 
+    .visitor-count {
+      margin-top: 24px;
+      padding: 10px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(10px);
+      color: #f2f2f2;
+      font-size: 15px;
+      letter-spacing: 1px;
+    }
+
     .gallery {
       padding: 40px;
       display: grid;
@@ -83,9 +86,7 @@
   <section class="hero">
     <h1>NIAR</h1>
     <p>FOLLOW ME</p>
-    
-
-    <!-- <h2 id="visitor-count">Loading...</h2> -->
+    <div class="visitor-count" id="visitor-count">瀏覽數：載入中...</div>
   </section>
 
   <section class="gallery">
@@ -93,6 +94,24 @@
     <img src="image/japan2.png">
     <img src="image/japan3.png">
   </section>
+
+  <script>
+    const visitorCount = document.getElementById("visitor-count");
+    const fallbackKey = "niar-home-local-views";
+
+    function showLocalViews() {
+      const localViews = Number(localStorage.getItem(fallbackKey) || 0) + 1;
+      localStorage.setItem(fallbackKey, localViews);
+      visitorCount.innerText = `瀏覽數：${localViews}`;
+    }
+
+    fetch("https://api.countapi.xyz/hit/niar-portfolio/home")
+      .then(response => response.json())
+      .then(data => {
+        visitorCount.innerText = `瀏覽數：${data.value}`;
+      })
+      .catch(showLocalViews);
+  </script>
 
 </body>
 </html>
