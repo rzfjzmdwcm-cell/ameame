@@ -98,17 +98,18 @@
   <script>
     const visitorCount = document.getElementById("visitor-count");
     const fallbackKey = "niar-home-local-views";
+    const baseViews = 2343;
 
     function showLocalViews() {
       const localViews = Number(localStorage.getItem(fallbackKey) || 0) + 1;
       localStorage.setItem(fallbackKey, localViews);
-      visitorCount.innerText = `瀏覽數：${localViews}`;
+      visitorCount.innerText = `瀏覽數：${baseViews + localViews}`;
     }
 
     fetch("https://api.countapi.xyz/hit/niar-portfolio/home")
       .then(response => response.json())
       .then(data => {
-        visitorCount.innerText = `瀏覽數：${data.value}`;
+        visitorCount.innerText = `瀏覽數：${baseViews + data.value}`;
       })
       .catch(showLocalViews);
   </script>
