@@ -227,6 +227,9 @@
       button.type = "button";
       image.src = src;
       image.alt = name;
+      image.addEventListener("error", () => {
+        button.remove();
+      });
 
       button.appendChild(image);
       button.addEventListener("click", () => {
