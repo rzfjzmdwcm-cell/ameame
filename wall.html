@@ -209,7 +209,7 @@
     const lightboxImg = document.getElementById("lightbox-img");
     const closeButton = document.querySelector(".close");
     const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif"];
-    const imageFolderApi = "https://api.github.com/repos/rainzhu/rainzhu.github.io/contents/image";
+    const imageFolderApi = "https://api.github.com/repos/rzfjzmdwcm-cell/rainzhu.github.io/contents/image";
 
     function photoNameFromPath(path) {
       return path
@@ -242,9 +242,7 @@
       wall.innerHTML = "";
 
       photos.forEach(photo => {
-        const src = photo.download_url;
-        const name = photoNameFromPath(photo.name);
-        wall.appendChild(createPhoto(src, name));
+        wall.appendChild(createPhoto(photo.download_url, photoNameFromPath(photo.name)));
       });
     }
 
@@ -253,7 +251,13 @@
     }
 
     fetch(`${imageFolderApi}?t=${Date.now()}`, { cache: "no-store" })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Could not load image folder");
+        }
+
+        return response.json();
+      })
       .then(files => {
         const photos = files
           .filter(file => file.type === "file")
