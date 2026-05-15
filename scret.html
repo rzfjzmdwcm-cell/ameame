@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Niar's Secret</title>
+
+  <script>
+    const password = "1234";
+    const isUnlocked = sessionStorage.getItem("secretUnlocked") === "true";
+
+    if (!isUnlocked) {
+      const userInput = prompt("請輸入密碼");
+
+      if (userInput === password) {
+        sessionStorage.setItem("secretUnlocked", "true");
+      } else {
+        alert("密碼錯誤");
+        window.location.href = "index.html";
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #0d0d0d;
+      color: white;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      text-align: center;
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      padding: 22px;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(14px);
+      z-index: 999;
+    }
+
+    nav a {
+      color: #d0d0d0;
+      text-decoration: none;
+      font-size: 14px;
+      letter-spacing: 2px;
+      transition: .3s;
+    }
+
+    nav a:hover {
+      color: white;
+    }
+
+    .secret {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 120px 24px 60px;
+    }
+
+    .secret h1 {
+      font-size: 64px;
+      letter-spacing: 4px;
+      margin-bottom: 20px;
+    }
+
+    .secret p {
+      max-width: 620px;
+      color: #b8b8b8;
+      font-size: 18px;
+      line-height: 2;
+    }
+
+    @media (max-width: 700px) {
+      nav {
+        gap: 18px;
+        padding: 18px 10px;
+        flex-wrap: wrap;
+      }
+
+      .secret h1 {
+        font-size: 42px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <a href="index.html">HOME</a>
+    <a href="gallery.html">GALLERY</a>
+    <a href="about.html">ABOUT</a>
+    <a href="contact.html">CONTACT</a>
+    <a href="daily.html">DAILY</a>
+    <a href="scret.html">SECRET</a>
+  </nav>
+
+  <section class="secret">
+    <h1>SECRET</h1>
+    <p>這是私密頁面。密碼正確後，這個瀏覽器分頁會暫時保持解鎖狀態。</p>
+  </section>
+</body>
+</html>
