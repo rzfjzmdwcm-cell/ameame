@@ -5,367 +5,357 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Rain's Diary</title>
+  <title>Niar's Daily</title>
 
   <style>
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
     }
 
-    html {
-      scroll-behavior: smooth;
+    html{
+      scroll-behavior:smooth;
     }
 
-    body {
-      background: #0d0d0d;
-      color: #f5f5f5;
+    body{
+      background:#0d0d0d;
+      color:white;
 
       font-family:
-        "Helvetica Neue",
-        Arial,
-        sans-serif;
+      "Helvetica Neue",
+      Arial,
+      sans-serif;
 
-      overflow-x: hidden;
+      overflow-x:hidden;
     }
 
     /* ===== nav ===== */
 
-    nav {
-      position: fixed;
-      top: 0;
-      width: 100%;
+    nav{
+      position:fixed;
+      top:0;
+      width:100%;
 
-      display: flex;
-      justify-content: center;
-      gap: 40px;
+      display:flex;
+      justify-content:center;
+      gap:40px;
 
-      padding: 22px;
+      padding:22px;
 
-      background: rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(16px);
+      background:rgba(0,0,0,0.45);
+      backdrop-filter:blur(14px);
 
-      z-index: 999;
+      z-index:999;
     }
 
-    nav a {
-      color: #d8d8d8;
-      text-decoration: none;
+    nav a{
+      color:#d0d0d0;
+      text-decoration:none;
 
-      font-size: 14px;
-      letter-spacing: 2px;
+      font-size:14px;
+      letter-spacing:2px;
 
-      transition: 0.3s;
+      transition:.3s;
     }
 
-    nav a:hover {
-      color: white;
-      opacity: 0.7;
+    nav a:hover{
+      color:white;
     }
 
     /* ===== hero ===== */
 
-    .hero {
-      width: 90%;
-      max-width: 1000px;
+    .hero{
+      padding-top:180px;
+      padding-bottom:140px;
 
-      margin: auto;
+      width:90%;
+      max-width:1200px;
 
-      padding-top: 180px;
-      padding-bottom: 140px;
+      margin:auto;
     }
 
-    .hero h1 {
-      font-size: 74px;
-      font-weight: 600;
+    .hero h1{
+      font-size:78px;
+      font-weight:600;
 
-      margin-bottom: 24px;
+      margin-bottom:25px;
 
-      letter-spacing: 4px;
+      letter-spacing:4px;
     }
 
-    .hero p {
-      color: #9f9f9f;
+    .hero p{
+      color:#9f9f9f;
 
-      font-size: 18px;
-      line-height: 2;
+      line-height:2;
+      font-size:18px;
     }
 
     /* ===== blog ===== */
 
-    .blog {
-      width: 100%;
+    .blog{
+      width:100%;
 
-      display: flex;
-      flex-direction: column;
+      display:flex;
+      flex-direction:column;
 
-      gap: 180px;
+      gap:220px;
 
-      padding-bottom: 160px;
+      padding-bottom:180px;
     }
 
     /* ===== post ===== */
 
-    .post {
+    .post{
 
-      width: 90%;
-      max-width: 1450px;
+      width:90%;
+      max-width:1450px;
 
-      margin: auto;
+      margin:auto;
 
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display:flex;
+      align-items:center;
+      justify-content:center;
 
-      gap: 80px;
+      gap:80px;
     }
 
-    /* 偶數篇左右反轉 */
+    /* 偶數篇反轉 */
 
-    .post:nth-child(even) {
-      flex-direction: row-reverse;
+    .post:nth-child(even){
+      flex-direction:row-reverse;
     }
 
     /* ===== slider ===== */
 
-    .slider {
-      width: 58%;
-      position: relative;
+    .slider{
+      width:58%;
+      position:relative;
     }
 
-    .slides {
+    .slides{
 
-      display: flex;
+      display:flex;
 
-      overflow-x: auto;
+      overflow-x:auto;
 
-      scroll-snap-type: x mandatory;
+      scroll-snap-type:x mandatory;
 
-      scroll-behavior: smooth;
+      scroll-behavior:smooth;
 
-      border-radius: 30px;
+      border-radius:30px;
 
-      scrollbar-width: none;
+      scrollbar-width:none;
     }
 
-    .slides::-webkit-scrollbar {
-      display: none;
+    .slides::-webkit-scrollbar{
+      display:none;
     }
 
-    .slides img {
+    .slides img{
 
-      width: 100%;
-      flex-shrink: 0;
+      width:100%;
+      flex-shrink:0;
 
-      scroll-snap-align: center;
+      scroll-snap-align:center;
 
-      object-fit: cover;
+      border-radius:30px;
 
-      border-radius: 30px;
+      object-fit:cover;
 
-      cursor: pointer;
+      cursor:pointer;
 
-      transition: 0.4s ease;
-
-      box-shadow:
-        0 0 30px rgba(255,255,255,0.05);
+      transition:.4s ease;
     }
 
-    .slides img:hover {
-      transform: scale(1.01);
+    .slides img:hover{
+      transform:scale(1.01);
     }
 
-    /* ===== slider button ===== */
+    /* ===== buttons ===== */
 
-    .btn {
+    .btn{
 
-      position: absolute;
-      top: 50%;
+      position:absolute;
+      top:50%;
 
-      transform: translateY(-50%);
+      transform:translateY(-50%);
 
-      width: 48px;
-      height: 48px;
+      width:48px;
+      height:48px;
 
-      border: none;
-      border-radius: 50%;
+      border:none;
+      border-radius:50%;
 
-      background: rgba(0,0,0,0.45);
+      background:rgba(0,0,0,0.45);
 
-      color: white;
+      backdrop-filter:blur(10px);
 
-      font-size: 20px;
+      color:white;
 
-      cursor: pointer;
+      font-size:22px;
 
-      z-index: 10;
+      cursor:pointer;
 
-      backdrop-filter: blur(12px);
+      z-index:10;
 
-      transition: 0.3s;
+      transition:.3s;
     }
 
-    .btn:hover {
-      background: rgba(255,255,255,0.18);
+    .btn:hover{
+      background:rgba(255,255,255,0.15);
     }
 
-    .prev {
-      left: 18px;
+    .prev{
+      left:16px;
     }
 
-    .next {
-      right: 18px;
+    .next{
+      right:16px;
     }
 
     /* ===== text ===== */
 
-    .post-content {
-      width: 34%;
+    .post-content{
+      width:34%;
     }
 
-    .post-date {
+    .post-date{
+      color:#666;
 
-      color: #666;
+      font-size:13px;
+      letter-spacing:3px;
 
-      font-size: 13px;
-      letter-spacing: 3px;
-
-      margin-bottom: 18px;
+      margin-bottom:18px;
     }
 
-    .post-content h2 {
+    .post-content h2{
+      font-size:52px;
+      font-weight:500;
 
-      font-size: 48px;
-      font-weight: 500;
-
-      margin-bottom: 28px;
+      margin-bottom:30px;
     }
 
-    .post-content p {
+    .post-content p{
+      color:#b8b8b8;
 
-      color: #b8b8b8;
+      line-height:2.2;
 
-      font-size: 17px;
-
-      line-height: 2.2;
+      font-size:17px;
     }
 
     /* ===== tags ===== */
 
-    .tags {
+    .tags{
+      display:flex;
+      flex-wrap:wrap;
 
-      display: flex;
-      gap: 10px;
+      gap:10px;
 
-      flex-wrap: wrap;
-
-      margin-top: 32px;
+      margin-top:30px;
     }
 
-    .tags span {
+    .tags span{
 
-      background: #1b1b1b;
+      background:#1a1a1a;
 
-      padding: 9px 15px;
+      padding:9px 16px;
 
-      border-radius: 999px;
+      border-radius:999px;
 
-      color: #999;
+      font-size:13px;
 
-      font-size: 13px;
+      color:#999;
     }
 
     /* ===== lightbox ===== */
 
-    .lightbox {
+    .lightbox{
 
-      position: fixed;
+      position:fixed;
 
-      top: 0;
-      left: 0;
+      top:0;
+      left:0;
 
-      width: 100%;
-      height: 100%;
+      width:100%;
+      height:100%;
 
-      background: rgba(0,0,0,0.92);
+      background:rgba(0,0,0,0.92);
 
-      display: none;
+      display:none;
 
-      justify-content: center;
-      align-items: center;
+      justify-content:center;
+      align-items:center;
 
-      z-index: 5000;
+      z-index:5000;
 
-      padding: 30px;
+      padding:30px;
     }
 
-    .lightbox.active {
-      display: flex;
+    .lightbox.active{
+      display:flex;
     }
 
-    .lightbox img {
+    .lightbox img{
 
-      width: 100%;
-      max-width: 1200px;
+      width:100%;
+      max-width:1200px;
 
-      border-radius: 20px;
+      border-radius:22px;
     }
 
     /* ===== footer ===== */
 
-    footer {
+    footer{
 
-      text-align: center;
+      text-align:center;
 
-      padding: 70px 20px;
+      padding:60px 20px;
 
-      color: #666;
+      color:#666;
 
-      font-size: 13px;
+      font-size:13px;
 
-      letter-spacing: 2px;
+      letter-spacing:2px;
     }
 
     /* ===== mobile ===== */
 
-    @media (max-width: 1000px) {
+    @media(max-width:1000px){
 
-      nav {
-        gap: 20px;
+      nav{
+        gap:22px;
       }
 
-      .hero {
-        padding-top: 140px;
+      .hero{
+        padding-top:140px;
       }
 
-      .hero h1 {
-        font-size: 52px;
+      .hero h1{
+        font-size:52px;
       }
 
-      .hero p {
-        font-size: 16px;
+      .hero p{
+        font-size:16px;
       }
 
       .post,
-      .post:nth-child(even) {
+      .post:nth-child(even){
 
-        flex-direction: column;
-
-        gap: 40px;
+        flex-direction:column;
       }
 
-      .slider {
-        width: 100%;
+      .slider{
+        width:100%;
       }
 
-      .post-content {
-        width: 100%;
+      .post-content{
+        width:100%;
       }
 
-      .post-content h2 {
-        font-size: 36px;
+      .post-content h2{
+        font-size:36px;
       }
 
     }
@@ -380,7 +370,7 @@
   <nav>
 
     <a href="#">HOME</a>
-    <a href="#">DIARY</a>
+    <a href="#">DAILY</a>
     <a href="#">ABOUT</a>
     <a href="#">CONTACT</a>
 
@@ -390,7 +380,7 @@
 
   <section class="hero">
 
-    <h1>Rain's Diary</h1>
+    <h1>Niar's Daily</h1>
 
     <p>
       記錄一些普通日子。<br>
@@ -407,14 +397,12 @@
 
     <section class="post">
 
-      <!-- 圖片 -->
+      <!-- slider -->
 
       <div class="slider">
 
-        <button
-          class="btn prev"
-          onclick="slide(this,-1)"
-        >
+        <button class="btn prev"
+          onclick="slide(this,-1)">
           ‹
         </button>
 
@@ -437,16 +425,14 @@
 
         </div>
 
-        <button
-          class="btn next"
-          onclick="slide(this,1)"
-        >
+        <button class="btn next"
+          onclick="slide(this,1)">
           ›
         </button>
 
       </div>
 
-      <!-- 文字 -->
+      <!-- text -->
 
       <div class="post-content">
 
@@ -462,7 +448,7 @@
 
           耳機差點掉下來。<br>
           有時候真的很想找一份
-          不需要每天早起通勤的工作。
+          不需要通勤的工作。
         </p>
 
         <div class="tags">
@@ -477,6 +463,19 @@
 
     </section>
 
+
+  <!-- ===== lightbox ===== -->
+
+  <div
+    class="lightbox"
+    id="lightbox"
+    onclick="closeLightbox()"
+  >
+
+    <img id="lightbox-img">
+
+  </div>
+
   <!-- ===== footer ===== -->
 
   <footer>
@@ -489,43 +488,46 @@
 
     /* ===== lightbox ===== */
 
-    function openLightbox(src) {
+    function openLightbox(src){
 
       document
-        .getElementById("lightbox")
-        .classList
-        .add("active");
+      .getElementById("lightbox")
+      .classList
+      .add("active");
 
       document
-        .getElementById("lightbox-img")
-        .src = src;
+      .getElementById("lightbox-img")
+      .src = src;
+
     }
 
-    function closeLightbox() {
+    function closeLightbox(){
 
       document
-        .getElementById("lightbox")
-        .classList
-        .remove("active");
+      .getElementById("lightbox")
+      .classList
+      .remove("active");
+
     }
 
     /* ===== slider ===== */
 
-    function slide(button, direction) {
+    function slide(button,direction){
 
       const slider =
-        button.parentElement.querySelector(".slides");
+      button.parentElement.querySelector(".slides");
 
       const width =
-        slider.clientWidth;
+      slider.clientWidth;
 
       slider.scrollBy({
 
         left: width * direction,
 
-        behavior: "smooth"
+        behavior:"smooth"
 
       });
+
     }
 
   </script>
