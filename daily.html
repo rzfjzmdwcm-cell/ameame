@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Rain's Diary</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: #0f0f0f;
+      color: #f5f5f5;
+
+      font-family:
+        "Helvetica Neue",
+        Arial,
+        sans-serif;
+
+      overflow-x: hidden;
+    }
+
+    /* ===== nav ===== */
+
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+
+      padding: 22px;
+
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(16px);
+
+      z-index: 999;
+    }
+
+    nav a {
+      color: #ddd;
+      text-decoration: none;
+
+      font-size: 14px;
+      letter-spacing: 2px;
+
+      transition: 0.3s;
+    }
+
+    nav a:hover {
+      color: white;
+      opacity: 0.7;
+    }
+
+    /* ===== hero ===== */
+
+    .hero {
+      padding-top: 180px;
+      padding-bottom: 140px;
+
+      width: 90%;
+      max-width: 900px;
+
+      margin: auto;
+    }
+
+    .hero h1 {
+      font-size: 74px;
+      font-weight: 600;
+
+      margin-bottom: 30px;
+
+      letter-spacing: 4px;
+    }
+
+    .hero p {
+      color: #9f9f9f;
+
+      font-size: 18px;
+      line-height: 2;
+    }
+
+    /* ===== posts ===== */
+
+    .blog {
+      width: 100%;
+      padding-bottom: 120px;
+    }
+
+    .post {
+      width: 88%;
+      max-width: 920px;
+
+      margin: 0 auto 160px auto;
+    }
+
+    .post-date {
+      color: #666;
+
+      font-size: 13px;
+      letter-spacing: 3px;
+
+      margin-bottom: 14px;
+    }
+
+    .post h2 {
+      font-size: 46px;
+      font-weight: 500;
+
+      margin-bottom: 35px;
+    }
+
+    /* ===== images ===== */
+
+    .post-images {
+      display: flex;
+      gap: 16px;
+
+      margin-bottom: 35px;
+    }
+
+    .post-images img {
+      width: 50%;
+
+      border-radius: 24px;
+
+      object-fit: cover;
+
+      cursor: pointer;
+
+      transition: 0.5s ease;
+
+      box-shadow:
+        0 0 20px rgba(255,255,255,0.04);
+    }
+
+    .post-images img:hover {
+      transform: scale(1.02);
+    }
+
+    /* ===== text ===== */
+
+    .post p {
+      color: #b8b8b8;
+
+      line-height: 2.2;
+
+      font-size: 17px;
+    }
+
+    /* ===== tags ===== */
+
+    .tags {
+      display: flex;
+      gap: 10px;
+
+      flex-wrap: wrap;
+
+      margin-top: 30px;
+    }
+
+    .tags span {
+      background: #1a1a1a;
+
+      padding:
+        9px 15px;
+
+      border-radius: 999px;
+
+      color: #999;
+
+      font-size: 13px;
+
+      letter-spacing: 1px;
+    }
+
+    /* ===== lightbox ===== */
+
+    .lightbox {
+      position: fixed;
+
+      top: 0;
+      left: 0;
+
+      width: 100%;
+      height: 100%;
+
+      background: rgba(0,0,0,0.92);
+
+      display: none;
+
+      justify-content: center;
+      align-items: center;
+
+      z-index: 5000;
+
+      padding: 30px;
+    }
+
+    .lightbox img {
+      width: 100%;
+      max-width: 1200px;
+
+      border-radius: 20px;
+    }
+
+    .lightbox.active {
+      display: flex;
+    }
+
+    /* ===== footer ===== */
+
+    footer {
+      text-align: center;
+
+      padding: 60px 20px;
+
+      color: #666;
+
+      font-size: 13px;
+
+      letter-spacing: 2px;
+    }
+
+    /* ===== mobile ===== */
+
+    @media (max-width: 900px) {
+
+      nav {
+        gap: 20px;
+      }
+
+      .hero {
+        padding-top: 140px;
+      }
+
+      .hero h1 {
+        font-size: 48px;
+      }
+
+      .hero p {
+        font-size: 16px;
+      }
+
+      .post h2 {
+        font-size: 34px;
+      }
+
+      .post-images {
+        flex-direction: column;
+      }
+
+      .post-images img {
+        width: 100%;
+      }
+
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ===== nav ===== -->
+
+  <nav>
+    <a href="#">HOME</a>
+    <a href="#">DIARY</a>
+    <a href="#">ABOUT</a>
+    <a href="#">CONTACT</a>
+  </nav>
+
+  <!-- ===== hero ===== -->
+
+  <section class="hero">
+
+    <h1>Rain's Diary</h1>
+
+    <p>
+      記錄一些普通日子。<br>
+      有時候是通勤，有時候只是發呆。
+    </p>
+
+  </section>
+
+  <!-- ===== blog ===== -->
+
+  <section class="blog">
+
+    <!-- post 1 -->
+
+    <section class="post">
+
+      <div class="post-date">
+        2026 / 05 / 15
+      </div>
+
+      <h2>台北通勤</h2>
+
+      <div class="post-images">
+
+        <img
+          src="image/TMR.png"
+          onclick="openLightbox(this.src)"
+        >
+
+        <img
+          src="image/outside.png"
+          onclick="openLightbox(this.src)"
+        >
+
+      </div>
+
+      <p>
+        今天捷運的人還是一樣很多。<br>
+        被擠到快貼在門上。<br><br>
+
+        耳機差點掉下來。<br>
+        突然很想找一份不用早起通勤的工作。
+      </p>
+
+      <div class="tags">
+        <span>#daily</span>
+        <span>#taipei</span>
+        <span>#commute</span>
+      </div>
+
+    </section>
+
+  </section>
+
+  <!-- ===== lightbox ===== -->
+
+  <div
+    class="lightbox"
+    id="lightbox"
+    onclick="closeLightbox()"
+  >
+
+    <img id="lightbox-img">
+
+  </div>
+
+  <!-- ===== footer ===== -->
+
+  <footer>
+    NORMAL DAYS ARCHIVE
+  </footer>
+
+  <!-- ===== script ===== -->
+
+  <script>
+
+    function openLightbox(src) {
+
+      document
+        .getElementById("lightbox")
+        .classList
+        .add("active");
+
+      document
+        .getElementById("lightbox-img")
+        .src = src;
+
+    }
+
+    function closeLightbox() {
+
+      document
+        .getElementById("lightbox")
+        .classList
+        .remove("active");
+
+    }
+
+  </script>
+
+</body>
+
+</html>
