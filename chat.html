@@ -135,6 +135,83 @@
       letter-spacing: 1px;
     }
 
+    .name-panel input:disabled,
+    .name-panel button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .admin-layout {
+      width: min(1040px, 100%);
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 16px;
+    }
+
+    .room-list {
+      display: none;
+      height: min(720px, calc(100vh - 124px));
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 8px;
+      background: #111;
+      overflow: hidden;
+    }
+
+    .admin-layout .room-list {
+      display: block;
+    }
+
+    .room-list h2 {
+      padding: 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background: #151515;
+      font-size: 14px;
+      letter-spacing: 2px;
+    }
+
+    .rooms {
+      height: calc(100% - 55px);
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .room-button {
+      width: 100%;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #d8d8d8;
+      cursor: pointer;
+      padding: 12px;
+      text-align: left;
+      font-family: inherit;
+      transition: 0.2s;
+    }
+
+    .room-button:hover,
+    .room-button.active {
+      background: #232323;
+      color: white;
+    }
+
+    .room-button strong,
+    .room-button span {
+      display: block;
+    }
+
+    .room-button strong {
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+
+    .room-button span {
+      color: #8b8b8b;
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .messages {
       min-height: 0;
       padding: 20px;
@@ -201,6 +278,21 @@
 
     .message.me .meta {
       color: #555;
+    }
+
+    .delete-message {
+      display: none;
+      margin-top: 8px;
+      border: 0;
+      background: transparent;
+      color: #ff9f9f;
+      cursor: pointer;
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+
+    .admin-layout .delete-message {
+      display: inline-block;
     }
 
     .composer {
@@ -291,6 +383,14 @@
         padding-top: 126px;
       }
 
+      .admin-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .room-list {
+        height: 190px;
+      }
+
       .chat-shell {
         height: calc(100vh - 150px);
       }
@@ -327,6 +427,11 @@
   </nav>
 
   <main class="chat-page">
+    <div class="room-list" id="room-list">
+      <h2>ROOMS</h2>
+      <div class="rooms" id="rooms"></div>
+    </div>
+
     <section class="chat-shell">
       <header class="chat-header">
         <div class="chat-title">
@@ -360,12 +465,14 @@
       addDoc,
       collection,
       deleteDoc,
+      doc,
       getDocs,
       getFirestore,
       onSnapshot,
       orderBy,
       query,
-      serverTimestamp
+      serverTimestamp,
+      setDoc
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -386,19 +493,57 @@
     const nameInput = document.getElementById("name-input");
     const saveNameButton = document.getElementById("save-name");
     const chatStatus = document.getElementById("chat-status");
-    const roomId = "niar-private-room";
+    const chatPage = document.querySelector(".chat-page");
+    const roomsEl = document.getElementById("rooms");
+    const urlParams = new URLSearchParams(window.location.search);
+    const isAdmin = urlParams.get("admin") === "1";
+    const adminKey = "niar-admin";
     const userIdKey = "niar-chat-user-id";
     const userNameKey = "niar-chat-user-name";
-    let currentUserId = localStorage.getItem(userIdKey);
-    let currentUserName = localStorage.getItem(userNameKey) || "";
+    let currentUserId = isAdmin ? "admin" : localStorage.getItem(userIdKey);
+    let currentUserName = isAdmin ? "NIAR" : localStorage.getItem(userNameKey) || "";
+    let activeRoomId = isAdmin ? "" : currentUserId;
+    let db;
     let messagesRef;
+    let unsubscribeMessages;
+    let isAdminAuthorized = !isAdmin;
+    let currentRooms = [];
+
+    if (isAdmin) {
+      const savedAdmin = sessionStorage.getItem("niar-chat-admin") === "true";
+      const inputKey = savedAdmin ? adminKey : prompt("請輸入管理密碼");
+
+      if (inputKey === adminKey) {
+        sessionStorage.setItem("niar-chat-admin", "true");
+        chatPage.classList.add("admin-layout");
+        isAdminAuthorized = true;
+      } else {
+        setStatus("Admin access denied", true);
+        composer.querySelectorAll("textarea, button, input").forEach(element => {
+          element.disabled = true;
+        });
+      }
+    }
 
     if (!currentUserId) {
       currentUserId = crypto.randomUUID();
       localStorage.setItem(userIdKey, currentUserId);
     }
 
+    if (!isAdmin) {
+      activeRoomId = currentUserId;
+      clearButton.style.display = "none";
+    }
+
     nameInput.value = currentUserName;
+
+    function lockNameInput() {
+      if (currentUserName || isAdmin) {
+        nameInput.disabled = true;
+        saveNameButton.disabled = true;
+        saveNameButton.textContent = "LOCKED";
+      }
+    }
 
     function requestName() {
       const name = prompt("請輸入你的名字");
@@ -407,19 +552,22 @@
         currentUserName = name.trim();
         localStorage.setItem(userNameKey, currentUserName);
         nameInput.value = currentUserName;
+        lockNameInput();
       }
     }
 
-    if (!currentUserName) {
+    if (!currentUserName && !isAdmin) {
       requestName();
     }
+
+    lockNameInput();
 
     function getDisplayName() {
       if (!currentUserName) {
         requestName();
       }
 
-      return currentUserName || "Anonymous";
+      return currentUserName;
     }
 
     function setStatus(text, isError = false) {
@@ -470,6 +618,18 @@
         meta.textContent = `${message.name || "Anonymous"} · ${formatTime(message.createdAt || message.localTime)}`;
 
         bubble.appendChild(meta);
+
+        if (isAdmin) {
+          const deleteButton = document.createElement("button");
+          deleteButton.className = "delete-message";
+          deleteButton.type = "button";
+          deleteButton.textContent = "DELETE";
+          deleteButton.addEventListener("click", async () => {
+            await deleteDoc(doc(db, "chatRooms", activeRoomId, "messages", message.id));
+          });
+          bubble.appendChild(deleteButton);
+        }
+
         row.appendChild(bubble);
         messagesEl.appendChild(row);
       });
@@ -477,9 +637,97 @@
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
+    function renderRooms(rooms) {
+      roomsEl.innerHTML = "";
+
+      if (rooms.length === 0) {
+        roomsEl.innerHTML = '<div class="empty">No rooms yet.</div>';
+        return;
+      }
+
+      rooms.forEach(room => {
+        const button = document.createElement("button");
+        const title = document.createElement("strong");
+        const preview = document.createElement("span");
+
+        button.className = `room-button ${room.id === activeRoomId ? "active" : ""}`;
+        button.type = "button";
+        title.textContent = room.visitorName || "Anonymous";
+        preview.textContent = room.lastMessage || "No messages yet.";
+
+        button.appendChild(title);
+        button.appendChild(preview);
+        button.addEventListener("click", () => {
+          openRoom(room.id);
+        });
+
+        roomsEl.appendChild(button);
+      });
+    }
+
+    async function saveRoomPreview(lastMessage = "") {
+      if (!activeRoomId) {
+        return;
+      }
+
+      const roomData = {
+        visitorId: isAdmin ? activeRoomId : currentUserId,
+        lastMessage,
+        lastMessageAt: serverTimestamp()
+      };
+
+      if (!isAdmin) {
+        roomData.visitorName = getDisplayName();
+      }
+
+      await setDoc(doc(db, "chatRooms", activeRoomId), roomData, { merge: true });
+    }
+
+    async function touchRoom() {
+      if (!activeRoomId || isAdmin) {
+        return;
+      }
+
+      await setDoc(doc(db, "chatRooms", activeRoomId), {
+        visitorId: currentUserId,
+        visitorName: getDisplayName(),
+        lastMessageAt: serverTimestamp()
+      }, { merge: true });
+    }
+
+    function openRoom(roomId) {
+      activeRoomId = roomId;
+      messagesRef = collection(db, "chatRooms", activeRoomId, "messages");
+      renderMessages([]);
+      renderRooms(currentRooms);
+
+      if (unsubscribeMessages) {
+        unsubscribeMessages();
+      }
+
+      const messagesQuery = query(messagesRef, orderBy("createdAt", "asc"));
+      unsubscribeMessages = onSnapshot(messagesQuery, snapshot => {
+        const messages = snapshot.docs.map(item => ({
+          id: item.id,
+          ...item.data()
+        }));
+
+        renderMessages(messages);
+        setStatus(isAdmin ? `Online · room ${activeRoomId.slice(0, 8)}` : "Online");
+      }, error => {
+        console.error(error);
+        setStatus(`Connection failed: ${error.code || "unknown error"}`, true);
+      });
+    }
+
     saveNameButton.addEventListener("click", () => {
+      if (currentUserName || isAdmin) {
+        return;
+      }
+
       currentUserName = nameInput.value.trim();
       localStorage.setItem(userNameKey, currentUserName);
+      lockNameInput();
       messageInput.focus();
     });
 
@@ -498,10 +746,22 @@
         return;
       }
 
+      if (!activeRoomId || !messagesRef) {
+        alert("請先選擇一個聊天室。");
+        return;
+      }
+
+      const displayName = getDisplayName();
+      if (!displayName) {
+        alert("請先輸入名字。");
+        return;
+      }
+
+      await saveRoomPreview(text);
       await addDoc(messagesRef, {
         type: "text",
         userId: currentUserId,
-        name: getDisplayName(),
+        name: displayName,
         text,
         localTime: Date.now(),
         createdAt: serverTimestamp()
@@ -545,6 +805,19 @@
       }
 
       try {
+        if (!activeRoomId || !messagesRef) {
+          alert("請先選擇一個聊天室。");
+          imageInput.value = "";
+          return;
+        }
+
+        const displayName = getDisplayName();
+        if (!displayName) {
+          alert("請先輸入名字。");
+          imageInput.value = "";
+          return;
+        }
+
         const src = await resizeImage(file);
 
         if (src.length > 850000) {
@@ -553,10 +826,11 @@
           return;
         }
 
+        await saveRoomPreview("[image]");
         await addDoc(messagesRef, {
           type: "image",
           userId: currentUserId,
-          name: getDisplayName(),
+          name: displayName,
           src,
           imageName: file.name,
           localTime: Date.now(),
@@ -572,10 +846,20 @@
     });
 
     clearButton.addEventListener("click", async () => {
+      if (!isAdmin) {
+        return;
+      }
+
+      if (!activeRoomId || !messagesRef) {
+        alert("請先選擇一個聊天室。");
+        return;
+      }
+
       const snapshot = await getDocs(messagesRef);
       const deletions = snapshot.docs.map(item => deleteDoc(item.ref));
 
       await Promise.all(deletions);
+      await saveRoomPreview("No messages yet.");
       messageInput.focus();
     });
 
@@ -586,7 +870,9 @@
       }
     });
 
-    if (!isFirebaseConfigured()) {
+    if (!isAdminAuthorized) {
+      renderMessages([]);
+    } else if (!isFirebaseConfigured()) {
       setStatus("Paste Firebase config first", true);
       renderMessages([]);
       composer.querySelectorAll("textarea, button, input").forEach(element => {
@@ -595,18 +881,33 @@
     } else {
       try {
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        messagesRef = collection(db, "chats", roomId, "messages");
-        const messagesQuery = query(messagesRef, orderBy("createdAt", "asc"));
+        db = getFirestore(app);
 
-        onSnapshot(messagesQuery, snapshot => {
-          const messages = snapshot.docs.map(doc => doc.data());
-          renderMessages(messages);
-          setStatus("Online");
-        }, error => {
-          console.error(error);
-          setStatus(`Connection failed: ${error.code || "unknown error"}`, true);
-        });
+        if (isAdmin) {
+          const roomsQuery = query(collection(db, "chatRooms"), orderBy("lastMessageAt", "desc"));
+
+          onSnapshot(roomsQuery, snapshot => {
+            const rooms = snapshot.docs.map(item => ({
+              id: item.id,
+              ...item.data()
+            }));
+
+            currentRooms = rooms;
+            renderRooms(rooms);
+
+            if (!activeRoomId && rooms.length > 0) {
+              openRoom(rooms[0].id);
+            } else if (!activeRoomId) {
+              setStatus("Online · waiting for visitors");
+            }
+          }, error => {
+            console.error(error);
+            setStatus(`Connection failed: ${error.code || "unknown error"}`, true);
+          });
+        } else {
+          await touchRoom();
+          openRoom(activeRoomId);
+        }
       } catch (error) {
         console.error(error);
         setStatus("Firebase setup failed", true);
