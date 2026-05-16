@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>NIAR Chat</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #080808;
+      color: white;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 34px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.62);
+      backdrop-filter: blur(14px);
+      z-index: 1000;
+    }
+
+    nav a {
+      color: #d8d8d8;
+      text-decoration: none;
+      font-size: 14px;
+      letter-spacing: 2px;
+      transition: .3s;
+    }
+
+    nav a:hover,
+    nav a.active {
+      color: white;
+    }
+
+    .chat-page {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 96px 18px 24px;
+    }
+
+    .chat-shell {
+      width: min(760px, 100%);
+      height: min(720px, calc(100vh - 124px));
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 8px;
+      background: #111;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background: #151515;
+    }
+
+    .chat-title h1 {
+      font-size: 18px;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+    }
+
+    .chat-title p {
+      color: #9c9c9c;
+      font-size: 13px;
+    }
+
+    .sender-toggle {
+      display: flex;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .sender-toggle button,
+    .clear-button,
+    .send-button {
+      border: 0;
+      color: white;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .sender-toggle button {
+      padding: 9px 13px;
+      background: transparent;
+      color: #aaa;
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+
+    .sender-toggle button.active {
+      background: white;
+      color: #111;
+    }
+
+    .messages {
+      min-height: 0;
+      padding: 20px;
+      overflow-y: auto;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        #0d0d0d;
+      background-size: 100% 44px;
+    }
+
+    .empty {
+      height: 100%;
+      display: grid;
+      place-items: center;
+      color: #777;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .message {
+      display: flex;
+      margin-bottom: 14px;
+    }
+
+    .message.me {
+      justify-content: flex-end;
+    }
+
+    .bubble {
+      max-width: min(78%, 480px);
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #242424;
+      color: #f3f3f3;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .message.me .bubble {
+      background: #f1f1f1;
+      color: #111;
+    }
+
+    .meta {
+      display: block;
+      margin-top: 6px;
+      color: #8b8b8b;
+      font-size: 11px;
+    }
+
+    .message.me .meta {
+      color: #555;
+    }
+
+    .composer {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      padding: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      background: #151515;
+    }
+
+    .composer textarea {
+      width: 100%;
+      min-height: 46px;
+      max-height: 120px;
+      resize: vertical;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 8px;
+      background: #0d0d0d;
+      color: white;
+      font: inherit;
+      padding: 12px;
+      outline: none;
+    }
+
+    .composer textarea:focus {
+      border-color: rgba(255, 255, 255, 0.45);
+    }
+
+    .clear-button,
+    .send-button {
+      align-self: end;
+      min-height: 46px;
+      padding: 0 18px;
+      border-radius: 8px;
+      letter-spacing: 1px;
+      font-size: 13px;
+    }
+
+    .clear-button {
+      background: #262626;
+      color: #d0d0d0;
+    }
+
+    .send-button {
+      background: white;
+      color: #111;
+    }
+
+    @media (max-width: 700px) {
+      body {
+        overflow: auto;
+      }
+
+      nav {
+        gap: 16px;
+        padding: 16px 10px;
+        flex-wrap: wrap;
+      }
+
+      nav a {
+        font-size: 12px;
+      }
+
+      .chat-page {
+        align-items: stretch;
+        padding-top: 126px;
+      }
+
+      .chat-shell {
+        height: calc(100vh - 150px);
+      }
+
+      .chat-header,
+      .composer {
+        grid-template-columns: 1fr;
+      }
+
+      .chat-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .composer {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .composer textarea {
+        grid-column: 1 / -1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <a href="index.html">HOME</a>
+    <a href="gallery.html">GALLERY</a>
+    <a href="wall.html">WALL</a>
+    <a href="chat.html" class="active">CHAT</a>
+    <a href="daily.html">DAILY</a>
+  </nav>
+
+  <main class="chat-page">
+    <section class="chat-shell">
+      <header class="chat-header">
+        <div class="chat-title">
+          <h1>PRIVATE CHAT</h1>
+          <p>One to one</p>
+        </div>
+
+        <div class="sender-toggle">
+          <button type="button" class="active" data-sender="me">ME</button>
+          <button type="button" data-sender="friend">FRIEND</button>
+        </div>
+      </header>
+
+      <div class="messages" id="messages"></div>
+
+      <form class="composer" id="composer">
+        <textarea id="message-input" placeholder="Type a message..." required></textarea>
+        <button class="clear-button" type="button" id="clear-chat">CLEAR</button>
+        <button class="send-button" type="submit">SEND</button>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const messagesEl = document.getElementById("messages");
+    const composer = document.getElementById("composer");
+    const messageInput = document.getElementById("message-input");
+    const clearButton = document.getElementById("clear-chat");
+    const senderButtons = document.querySelectorAll("[data-sender]");
+    const storageKey = "niar-one-to-one-chat";
+    let activeSender = "me";
+
+    function getMessages() {
+      return JSON.parse(localStorage.getItem(storageKey) || "[]");
+    }
+
+    function saveMessages(messages) {
+      localStorage.setItem(storageKey, JSON.stringify(messages));
+    }
+
+    function formatTime(value) {
+      return new Date(value).toLocaleTimeString("zh-TW", {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function renderMessages() {
+      const messages = getMessages();
+      messagesEl.innerHTML = "";
+
+      if (messages.length === 0) {
+        messagesEl.innerHTML = '<div class="empty">No messages yet.</div>';
+        return;
+      }
+
+      messages.forEach(message => {
+        const row = document.createElement("div");
+        const bubble = document.createElement("div");
+        const meta = document.createElement("span");
+
+        row.className = `message ${message.sender}`;
+        bubble.className = "bubble";
+        bubble.textContent = message.text;
+        meta.className = "meta";
+        meta.textContent = `${message.sender === "me" ? "ME" : "FRIEND"} · ${formatTime(message.createdAt)}`;
+
+        bubble.appendChild(meta);
+        row.appendChild(bubble);
+        messagesEl.appendChild(row);
+      });
+
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    senderButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        activeSender = button.dataset.sender;
+        senderButtons.forEach(item => item.classList.toggle("active", item === button));
+        messageInput.focus();
+      });
+    });
+
+    composer.addEventListener("submit", event => {
+      event.preventDefault();
+
+      const text = messageInput.value.trim();
+      if (!text) {
+        return;
+      }
+
+      const messages = getMessages();
+      messages.push({
+        sender: activeSender,
+        text,
+        createdAt: Date.now()
+      });
+
+      saveMessages(messages);
+      messageInput.value = "";
+      renderMessages();
+    });
+
+    clearButton.addEventListener("click", () => {
+      localStorage.removeItem(storageKey);
+      renderMessages();
+      messageInput.focus();
+    });
+
+    messageInput.addEventListener("keydown", event => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        composer.requestSubmit();
+      }
+    });
+
+    renderMessages();
+  </script>
+</body>
+
+</html>
