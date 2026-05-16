@@ -466,6 +466,7 @@
       collection,
       deleteDoc,
       doc,
+      getDoc,
       getDocs,
       getFirestore,
       onSnapshot,
@@ -490,6 +491,7 @@
     const messageInput = document.getElementById("message-input");
     const imageInput = document.getElementById("image-input");
     const clearButton = document.getElementById("clear-chat");
+    const sendButton = document.querySelector(".send-button");
     const nameInput = document.getElementById("name-input");
     const saveNameButton = document.getElementById("save-name");
     const chatStatus = document.getElementById("chat-status");
@@ -498,6 +500,9 @@
     const urlParams = new URLSearchParams(window.location.search);
     const isAdmin = urlParams.get("admin") === "1";
     const adminKey = "niar-admin";
+    const heartbeatMs = 20000;
+    const adminOfflineMs = 45000;
+    const roomAwayMs = 180000;
     const userIdKey = "niar-chat-user-id";
     const userNameKey = "niar-chat-user-name";
     let currentUserId = isAdmin ? "admin" : localStorage.getItem(userIdKey);
@@ -506,8 +511,13 @@
     let db;
     let messagesRef;
     let unsubscribeMessages;
+    let unsubscribeAdminPresence;
     let isAdminAuthorized = !isAdmin;
     let currentRooms = [];
+    let adminPresence = null;
+    let adminHeartbeatTimer;
+    let visitorHeartbeatTimer;
+    let roomInitialized = false;
 
     if (isAdmin) {
       const savedAdmin = sessionStorage.getItem("niar-chat-admin") === "true";
@@ -533,6 +543,7 @@
     if (!isAdmin) {
       activeRoomId = currentUserId;
       clearButton.style.display = "none";
+      setChatEnabled(false);
     }
 
     nameInput.value = currentUserName;
@@ -586,6 +597,55 @@
         hour: "2-digit",
         minute: "2-digit"
       });
+    }
+
+    function toDate(value) {
+      if (!value) {
+        return null;
+      }
+
+      return typeof value.toDate === "function" ? value.toDate() : new Date(value);
+    }
+
+    function isFresh(value, maxAge) {
+      const date = toDate(value);
+      return date ? Date.now() - date.getTime() <= maxAge : false;
+    }
+
+    function setChatEnabled(enabled) {
+      if (isAdmin) {
+        messageInput.disabled = false;
+        imageInput.disabled = false;
+        sendButton.disabled = false;
+        return;
+      }
+
+      messageInput.disabled = !enabled;
+      imageInput.disabled = !enabled;
+      sendButton.disabled = !enabled;
+    }
+
+    function updateVisitorAvailability() {
+      if (isAdmin) {
+        return;
+      }
+
+      const adminOnline = adminPresence && adminPresence.online && isFresh(adminPresence.lastActiveAt, adminOfflineMs);
+
+      setChatEnabled(adminOnline);
+      setStatus(adminOnline ? "Online" : "目前 niar 不在線", !adminOnline);
+    }
+
+    function roomStatus(room) {
+      if (isFresh(room.lastActiveAt, heartbeatMs * 2.5)) {
+        return "Online";
+      }
+
+      if (isFresh(room.lastActiveAt, roomAwayMs)) {
+        return "Away";
+      }
+
+      return "Expired";
     }
 
     function renderMessages(messages) {
@@ -653,7 +713,7 @@
         button.className = `room-button ${room.id === activeRoomId ? "active" : ""}`;
         button.type = "button";
         title.textContent = room.visitorName || "Anonymous";
-        preview.textContent = room.lastMessage || "No messages yet.";
+        preview.textContent = `${roomStatus(room)} · ${room.lastMessage || "No messages yet."}`;
 
         button.appendChild(title);
         button.appendChild(preview);
@@ -678,6 +738,8 @@
 
       if (!isAdmin) {
         roomData.visitorName = getDisplayName();
+        roomData.lastActiveAt = serverTimestamp();
+        roomData.online = true;
       }
 
       await setDoc(doc(db, "chatRooms", activeRoomId), roomData, { merge: true });
@@ -688,11 +750,50 @@
         return;
       }
 
-      await setDoc(doc(db, "chatRooms", activeRoomId), {
+      const roomRef = doc(db, "chatRooms", activeRoomId);
+      const roomData = {
         visitorId: currentUserId,
         visitorName: getDisplayName(),
-        lastMessageAt: serverTimestamp()
+        online: true,
+        lastActiveAt: serverTimestamp()
+      };
+
+      if (!roomInitialized) {
+        const roomSnapshot = await getDoc(roomRef);
+
+        if (!roomSnapshot.exists()) {
+          roomData.lastMessage = "No messages yet.";
+          roomData.lastMessageAt = serverTimestamp();
+        }
+
+        roomInitialized = true;
+      }
+
+      await setDoc(roomRef, roomData, { merge: true });
+    }
+
+    async function setAdminPresence(online) {
+      await setDoc(doc(db, "system", "admin"), {
+        name: "niar",
+        online,
+        lastActiveAt: serverTimestamp()
       }, { merge: true });
+    }
+
+    async function deleteRoom(roomId) {
+      const roomMessages = await getDocs(collection(db, "chatRooms", roomId, "messages"));
+      const deletions = roomMessages.docs.map(item => deleteDoc(item.ref));
+
+      await Promise.all(deletions);
+      await deleteDoc(doc(db, "chatRooms", roomId));
+    }
+
+    function cleanupExpiredRooms(rooms) {
+      rooms.forEach(room => {
+        if (!room.lastActiveAt || !isFresh(room.lastActiveAt, roomAwayMs)) {
+          deleteRoom(room.id);
+        }
+      });
     }
 
     function openRoom(roomId) {
@@ -713,7 +814,11 @@
         }));
 
         renderMessages(messages);
-        setStatus(isAdmin ? `Online · room ${activeRoomId.slice(0, 8)}` : "Online");
+        if (isAdmin) {
+          setStatus(`Online · room ${activeRoomId.slice(0, 8)}`);
+        } else {
+          updateVisitorAvailability();
+        }
       }, error => {
         console.error(error);
         setStatus(`Connection failed: ${error.code || "unknown error"}`, true);
@@ -748,6 +853,12 @@
 
       if (!activeRoomId || !messagesRef) {
         alert("請先選擇一個聊天室。");
+        return;
+      }
+
+      if (!isAdmin && (!adminPresence || !adminPresence.online || !isFresh(adminPresence.lastActiveAt, adminOfflineMs))) {
+        alert("目前 niar 不在線。");
+        updateVisitorAvailability();
         return;
       }
 
@@ -811,6 +922,13 @@
           return;
         }
 
+        if (!isAdmin && (!adminPresence || !adminPresence.online || !isFresh(adminPresence.lastActiveAt, adminOfflineMs))) {
+          alert("目前 niar 不在線。");
+          imageInput.value = "";
+          updateVisitorAvailability();
+          return;
+        }
+
         const displayName = getDisplayName();
         if (!displayName) {
           alert("請先輸入名字。");
@@ -870,6 +988,35 @@
       }
     });
 
+    window.addEventListener("beforeunload", () => {
+      if (adminHeartbeatTimer) {
+        clearInterval(adminHeartbeatTimer);
+      }
+
+      if (visitorHeartbeatTimer) {
+        clearInterval(visitorHeartbeatTimer);
+      }
+
+      if (unsubscribeMessages) {
+        unsubscribeMessages();
+      }
+
+      if (unsubscribeAdminPresence) {
+        unsubscribeAdminPresence();
+      }
+
+      if (isAdmin && isAdminAuthorized && db) {
+        setAdminPresence(false);
+      } else if (!isAdmin && db && activeRoomId) {
+        setDoc(doc(db, "chatRooms", activeRoomId), {
+          online: false,
+          lastActiveAt: serverTimestamp()
+        }, { merge: true });
+      }
+    });
+
+    setInterval(updateVisitorAvailability, 10000);
+
     if (!isAdminAuthorized) {
       renderMessages([]);
     } else if (!isFirebaseConfigured()) {
@@ -884,6 +1031,11 @@
         db = getFirestore(app);
 
         if (isAdmin) {
+          await setAdminPresence(true);
+          adminHeartbeatTimer = setInterval(() => {
+            setAdminPresence(true);
+          }, heartbeatMs);
+
           const roomsQuery = query(collection(db, "chatRooms"), orderBy("lastMessageAt", "desc"));
 
           onSnapshot(roomsQuery, snapshot => {
@@ -892,11 +1044,12 @@
               ...item.data()
             }));
 
-            currentRooms = rooms;
-            renderRooms(rooms);
+            cleanupExpiredRooms(rooms);
+            currentRooms = rooms.filter(room => room.lastActiveAt && isFresh(room.lastActiveAt, roomAwayMs));
+            renderRooms(currentRooms);
 
-            if (!activeRoomId && rooms.length > 0) {
-              openRoom(rooms[0].id);
+            if (!activeRoomId && currentRooms.length > 0) {
+              openRoom(currentRooms[0].id);
             } else if (!activeRoomId) {
               setStatus("Online · waiting for visitors");
             }
@@ -907,6 +1060,17 @@
         } else {
           await touchRoom();
           openRoom(activeRoomId);
+
+          unsubscribeAdminPresence = onSnapshot(doc(db, "system", "admin"), snapshot => {
+            adminPresence = snapshot.exists() ? snapshot.data() : null;
+            updateVisitorAvailability();
+          }, error => {
+            console.error(error);
+            setStatus("目前 niar 不在線", true);
+            setChatEnabled(false);
+          });
+
+          visitorHeartbeatTimer = setInterval(touchRoom, heartbeatMs);
         }
       } catch (error) {
         console.error(error);
