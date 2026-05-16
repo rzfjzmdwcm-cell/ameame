@@ -93,15 +93,31 @@
       color: #ff9f9f;
     }
 
-    .sender-toggle {
+    .name-panel {
       display: flex;
+      align-items: center;
+      gap: 10px;
       border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 999px;
-      overflow: hidden;
+      border-radius: 8px;
+      padding: 8px;
       flex-shrink: 0;
     }
 
-    .sender-toggle button,
+    .name-panel input {
+      width: 150px;
+      border: 0;
+      background: transparent;
+      color: white;
+      outline: none;
+      font: inherit;
+      font-size: 13px;
+    }
+
+    .name-panel input::placeholder {
+      color: #777;
+    }
+
+    .name-panel button,
     .clear-button,
     .send-button {
       border: 0;
@@ -110,17 +126,13 @@
       font-family: inherit;
     }
 
-    .sender-toggle button {
-      padding: 9px 13px;
-      background: transparent;
-      color: #aaa;
-      font-size: 12px;
-      letter-spacing: 1px;
-    }
-
-    .sender-toggle button.active {
+    .name-panel button {
+      padding: 8px 11px;
+      border-radius: 6px;
       background: white;
       color: #111;
+      font-size: 12px;
+      letter-spacing: 1px;
     }
 
     .messages {
@@ -322,9 +334,9 @@
           <p id="chat-status">Connecting to Firebase...</p>
         </div>
 
-        <div class="sender-toggle">
-          <button type="button" class="active" data-sender="me">ME</button>
-          <button type="button" data-sender="friend">FRIEND</button>
+        <div class="name-panel">
+          <input type="text" id="name-input" placeholder="Your name">
+          <button type="button" id="save-name">SAVE</button>
         </div>
       </header>
 
@@ -371,11 +383,44 @@
     const messageInput = document.getElementById("message-input");
     const imageInput = document.getElementById("image-input");
     const clearButton = document.getElementById("clear-chat");
-    const senderButtons = document.querySelectorAll("[data-sender]");
+    const nameInput = document.getElementById("name-input");
+    const saveNameButton = document.getElementById("save-name");
     const chatStatus = document.getElementById("chat-status");
     const roomId = "niar-private-room";
-    let activeSender = "me";
+    const userIdKey = "niar-chat-user-id";
+    const userNameKey = "niar-chat-user-name";
+    let currentUserId = localStorage.getItem(userIdKey);
+    let currentUserName = localStorage.getItem(userNameKey) || "";
     let messagesRef;
+
+    if (!currentUserId) {
+      currentUserId = crypto.randomUUID();
+      localStorage.setItem(userIdKey, currentUserId);
+    }
+
+    nameInput.value = currentUserName;
+
+    function requestName() {
+      const name = prompt("請輸入你的名字");
+
+      if (name && name.trim()) {
+        currentUserName = name.trim();
+        localStorage.setItem(userNameKey, currentUserName);
+        nameInput.value = currentUserName;
+      }
+    }
+
+    if (!currentUserName) {
+      requestName();
+    }
+
+    function getDisplayName() {
+      if (!currentUserName) {
+        requestName();
+      }
+
+      return currentUserName || "Anonymous";
+    }
 
     function setStatus(text, isError = false) {
       chatStatus.textContent = text;
@@ -408,20 +453,21 @@
         const bubble = document.createElement("div");
         const meta = document.createElement("span");
 
-        row.className = `message ${message.sender}`;
+        const isMine = message.userId === currentUserId || message.sender === "me";
+        row.className = `message ${isMine ? "me" : "friend"}`;
         bubble.className = message.type === "image" ? "bubble image-bubble" : "bubble";
 
         if (message.type === "image") {
           const image = document.createElement("img");
           image.src = message.src;
-          image.alt = message.name;
+          image.alt = message.imageName || "Uploaded image";
           bubble.appendChild(image);
         } else {
           bubble.textContent = message.text;
         }
 
         meta.className = "meta";
-        meta.textContent = `${message.sender === "me" ? "ME" : "FRIEND"} · ${formatTime(message.createdAt || message.localTime)}`;
+        meta.textContent = `${message.name || "Anonymous"} · ${formatTime(message.createdAt || message.localTime)}`;
 
         bubble.appendChild(meta);
         row.appendChild(bubble);
@@ -431,12 +477,17 @@
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    senderButtons.forEach(button => {
-      button.addEventListener("click", () => {
-        activeSender = button.dataset.sender;
-        senderButtons.forEach(item => item.classList.toggle("active", item === button));
-        messageInput.focus();
-      });
+    saveNameButton.addEventListener("click", () => {
+      currentUserName = nameInput.value.trim();
+      localStorage.setItem(userNameKey, currentUserName);
+      messageInput.focus();
+    });
+
+    nameInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        saveNameButton.click();
+      }
     });
 
     composer.addEventListener("submit", async event => {
@@ -449,7 +500,8 @@
 
       await addDoc(messagesRef, {
         type: "text",
-        sender: activeSender,
+        userId: currentUserId,
+        name: getDisplayName(),
         text,
         localTime: Date.now(),
         createdAt: serverTimestamp()
@@ -503,9 +555,10 @@
 
         await addDoc(messagesRef, {
           type: "image",
-          sender: activeSender,
+          userId: currentUserId,
+          name: getDisplayName(),
           src,
-          name: file.name,
+          imageName: file.name,
           localTime: Date.now(),
           createdAt: serverTimestamp()
         });
