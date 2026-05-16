@@ -159,6 +159,18 @@
       overflow-wrap: anywhere;
     }
 
+    .bubble img {
+      display: block;
+      max-width: min(280px, 100%);
+      max-height: 320px;
+      border-radius: 6px;
+      object-fit: contain;
+    }
+
+    .bubble.image-bubble {
+      padding: 8px;
+    }
+
     .message.me .bubble {
       background: #f1f1f1;
       color: #111;
@@ -177,11 +189,32 @@
 
     .composer {
       display: grid;
-      grid-template-columns: 1fr auto auto;
+      grid-template-columns: auto 1fr auto auto;
       gap: 10px;
       padding: 14px;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
       background: #151515;
+    }
+
+    .image-button {
+      align-self: end;
+      display: grid;
+      place-items: center;
+      min-width: 46px;
+      min-height: 46px;
+      border-radius: 8px;
+      background: #262626;
+      color: #d0d0d0;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .image-button input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
     }
 
     .composer textarea {
@@ -258,7 +291,7 @@
 
       .composer {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: auto 1fr 1fr;
       }
 
       .composer textarea {
@@ -294,6 +327,10 @@
       <div class="messages" id="messages"></div>
 
       <form class="composer" id="composer">
+        <label class="image-button" aria-label="Upload image">
+          +
+          <input type="file" id="image-input" accept="image/*">
+        </label>
         <textarea id="message-input" placeholder="Type a message..." required></textarea>
         <button class="clear-button" type="button" id="clear-chat">CLEAR</button>
         <button class="send-button" type="submit">SEND</button>
@@ -305,18 +342,11 @@
     const messagesEl = document.getElementById("messages");
     const composer = document.getElementById("composer");
     const messageInput = document.getElementById("message-input");
+    const imageInput = document.getElementById("image-input");
     const clearButton = document.getElementById("clear-chat");
     const senderButtons = document.querySelectorAll("[data-sender]");
-    const storageKey = "niar-one-to-one-chat";
     let activeSender = "me";
-
-    function getMessages() {
-      return JSON.parse(localStorage.getItem(storageKey) || "[]");
-    }
-
-    function saveMessages(messages) {
-      localStorage.setItem(storageKey, JSON.stringify(messages));
-    }
+    let messages = [];
 
     function formatTime(value) {
       return new Date(value).toLocaleTimeString("zh-TW", {
@@ -326,7 +356,6 @@
     }
 
     function renderMessages() {
-      const messages = getMessages();
       messagesEl.innerHTML = "";
 
       if (messages.length === 0) {
@@ -340,8 +369,17 @@
         const meta = document.createElement("span");
 
         row.className = `message ${message.sender}`;
-        bubble.className = "bubble";
-        bubble.textContent = message.text;
+        bubble.className = message.type === "image" ? "bubble image-bubble" : "bubble";
+
+        if (message.type === "image") {
+          const image = document.createElement("img");
+          image.src = message.src;
+          image.alt = message.name;
+          bubble.appendChild(image);
+        } else {
+          bubble.textContent = message.text;
+        }
+
         meta.className = "meta";
         meta.textContent = `${message.sender === "me" ? "ME" : "FRIEND"} · ${formatTime(message.createdAt)}`;
 
@@ -369,20 +407,44 @@
         return;
       }
 
-      const messages = getMessages();
       messages.push({
+        type: "text",
         sender: activeSender,
         text,
         createdAt: Date.now()
       });
 
-      saveMessages(messages);
       messageInput.value = "";
       renderMessages();
     });
 
+    imageInput.addEventListener("change", () => {
+      const file = imageInput.files[0];
+
+      if (!file) {
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        messages.push({
+          type: "image",
+          sender: activeSender,
+          src: reader.result,
+          name: file.name,
+          createdAt: Date.now()
+        });
+
+        imageInput.value = "";
+        renderMessages();
+        messageInput.focus();
+      });
+
+      reader.readAsDataURL(file);
+    });
+
     clearButton.addEventListener("click", () => {
-      localStorage.removeItem(storageKey);
+      messages = [];
       renderMessages();
       messageInput.focus();
     });
