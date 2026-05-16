@@ -89,6 +89,10 @@
       font-size: 13px;
     }
 
+    .chat-title p.offline {
+      color: #ff9f9f;
+    }
+
     .sender-toggle {
       display: flex;
       border: 1px solid rgba(255, 255, 255, 0.18);
@@ -315,7 +319,7 @@
       <header class="chat-header">
         <div class="chat-title">
           <h1>PRIVATE CHAT</h1>
-          <p>One to one</p>
+          <p id="chat-status">Connecting...</p>
         </div>
 
         <div class="sender-toggle">
@@ -338,24 +342,60 @@
     </section>
   </main>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      addDoc,
+      collection,
+      deleteDoc,
+      getDocs,
+      getFirestore,
+      onSnapshot,
+      orderBy,
+      query,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDS-_LnVEzcfRoVVYSzjriRvwptIse6nhc",
+      authDomain: "niar-fda7f.firebaseapp.com",
+      projectId: "niar-fda7f",
+      storageBucket: "niar-fda7f.firebasestorage.app",
+      messagingSenderId: "315938409879",
+      appId: "1:315938409879:web:8919a3f79a71d7d5fac8d2",
+      measurementId: "G-5HHXRQK8R4"
+    };
+
     const messagesEl = document.getElementById("messages");
     const composer = document.getElementById("composer");
     const messageInput = document.getElementById("message-input");
     const imageInput = document.getElementById("image-input");
     const clearButton = document.getElementById("clear-chat");
     const senderButtons = document.querySelectorAll("[data-sender]");
+    const chatStatus = document.getElementById("chat-status");
+    const roomId = "niar-private-room";
     let activeSender = "me";
-    let messages = [];
+    let messagesRef;
+
+    function setStatus(text, isError = false) {
+      chatStatus.textContent = text;
+      chatStatus.classList.toggle("offline", isError);
+    }
+
+    function isFirebaseConfigured() {
+      return Object.values(firebaseConfig).every(value => !value.includes("PASTE_"));
+    }
 
     function formatTime(value) {
-      return new Date(value).toLocaleTimeString("zh-TW", {
+      const date = value && typeof value.toDate === "function" ? value.toDate() : new Date(value || Date.now());
+
+      return date.toLocaleTimeString("zh-TW", {
         hour: "2-digit",
         minute: "2-digit"
       });
     }
 
-    function renderMessages() {
+    function renderMessages(messages) {
       messagesEl.innerHTML = "";
 
       if (messages.length === 0) {
@@ -381,7 +421,7 @@
         }
 
         meta.className = "meta";
-        meta.textContent = `${message.sender === "me" ? "ME" : "FRIEND"} · ${formatTime(message.createdAt)}`;
+        meta.textContent = `${message.sender === "me" ? "ME" : "FRIEND"} · ${formatTime(message.createdAt || message.localTime)}`;
 
         bubble.appendChild(meta);
         row.appendChild(bubble);
@@ -399,7 +439,7 @@
       });
     });
 
-    composer.addEventListener("submit", event => {
+    composer.addEventListener("submit", async event => {
       event.preventDefault();
 
       const text = messageInput.value.trim();
@@ -407,45 +447,82 @@
         return;
       }
 
-      messages.push({
+      await addDoc(messagesRef, {
         type: "text",
         sender: activeSender,
         text,
-        createdAt: Date.now()
+        localTime: Date.now(),
+        createdAt: serverTimestamp()
       });
 
       messageInput.value = "";
-      renderMessages();
     });
 
-    imageInput.addEventListener("change", () => {
+    function resizeImage(file) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        const reader = new FileReader();
+
+        reader.addEventListener("load", () => {
+          image.src = reader.result;
+        });
+
+        reader.addEventListener("error", reject);
+        image.addEventListener("error", reject);
+        image.addEventListener("load", () => {
+          const maxSide = 900;
+          const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d");
+
+          canvas.width = Math.round(image.width * scale);
+          canvas.height = Math.round(image.height * scale);
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg", 0.72));
+        });
+
+        reader.readAsDataURL(file);
+      });
+    }
+
+    imageInput.addEventListener("change", async () => {
       const file = imageInput.files[0];
 
       if (!file) {
         return;
       }
 
-      const reader = new FileReader();
-      reader.addEventListener("load", () => {
-        messages.push({
+      try {
+        const src = await resizeImage(file);
+
+        if (src.length > 850000) {
+          alert("圖片太大，請換一張較小的照片。");
+          imageInput.value = "";
+          return;
+        }
+
+        await addDoc(messagesRef, {
           type: "image",
           sender: activeSender,
-          src: reader.result,
+          src,
           name: file.name,
-          createdAt: Date.now()
+          localTime: Date.now(),
+          createdAt: serverTimestamp()
         });
 
         imageInput.value = "";
-        renderMessages();
         messageInput.focus();
-      });
-
-      reader.readAsDataURL(file);
+      } catch (error) {
+        alert("圖片上傳失敗，請再試一次。");
+        imageInput.value = "";
+      }
     });
 
-    clearButton.addEventListener("click", () => {
-      messages = [];
-      renderMessages();
+    clearButton.addEventListener("click", async () => {
+      const snapshot = await getDocs(messagesRef);
+      const deletions = snapshot.docs.map(item => deleteDoc(item.ref));
+
+      await Promise.all(deletions);
       messageInput.focus();
     });
 
@@ -456,7 +533,26 @@
       }
     });
 
-    renderMessages();
+    if (isFirebaseConfigured()) {
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      messagesRef = collection(db, "chats", roomId, "messages");
+      const messagesQuery = query(messagesRef, orderBy("createdAt", "asc"));
+
+      onSnapshot(messagesQuery, snapshot => {
+        const messages = snapshot.docs.map(doc => doc.data());
+        renderMessages(messages);
+        setStatus("Online");
+      }, () => {
+        setStatus("Connection failed", true);
+      });
+    } else {
+      setStatus("Paste Firebase config first", true);
+      renderMessages([]);
+      composer.querySelectorAll("textarea, button, input").forEach(element => {
+        element.disabled = true;
+      });
+    }
   </script>
 </body>
 
