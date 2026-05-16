@@ -319,7 +319,7 @@
       <header class="chat-header">
         <div class="chat-title">
           <h1>PRIVATE CHAT</h1>
-          <p id="chat-status">Connecting...</p>
+          <p id="chat-status">Connecting to Firebase...</p>
         </div>
 
         <div class="sender-toggle">
@@ -533,25 +533,31 @@
       }
     });
 
-    if (isFirebaseConfigured()) {
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-      messagesRef = collection(db, "chats", roomId, "messages");
-      const messagesQuery = query(messagesRef, orderBy("createdAt", "asc"));
-
-      onSnapshot(messagesQuery, snapshot => {
-        const messages = snapshot.docs.map(doc => doc.data());
-        renderMessages(messages);
-        setStatus("Online");
-      }, () => {
-        setStatus("Connection failed", true);
-      });
-    } else {
+    if (!isFirebaseConfigured()) {
       setStatus("Paste Firebase config first", true);
       renderMessages([]);
       composer.querySelectorAll("textarea, button, input").forEach(element => {
         element.disabled = true;
       });
+    } else {
+      try {
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        messagesRef = collection(db, "chats", roomId, "messages");
+        const messagesQuery = query(messagesRef, orderBy("createdAt", "asc"));
+
+        onSnapshot(messagesQuery, snapshot => {
+          const messages = snapshot.docs.map(doc => doc.data());
+          renderMessages(messages);
+          setStatus("Online");
+        }, error => {
+          console.error(error);
+          setStatus(`Connection failed: ${error.code || "unknown error"}`, true);
+        });
+      } catch (error) {
+        console.error(error);
+        setStatus("Firebase setup failed", true);
+      }
     }
   </script>
 </body>
