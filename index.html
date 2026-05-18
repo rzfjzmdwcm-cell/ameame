@@ -77,6 +77,13 @@
       font-size: 20px;
     }
 
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
     .chat-button {
       display: inline-block;
       margin-top: 26px;
@@ -150,7 +157,10 @@
   <section class="hero">
     <h1>NIAR</h1>
     <p>CHAT TO ME ANYTIME</p>
-    <a class="chat-button" href="chat.html">CHAT</a>
+    <div class="hero-actions">
+      <a class="chat-button" href="chat.html">CHAT</a>
+      <a class="chat-button" href="https://www.patreon.com/niarlife" target="_blank" rel="noopener noreferrer">SUPPORT</a>
+    </div>
     <div class="visitor-count" id="visitor-count">瀏覽數：載入中...</div>
   </section>
 
