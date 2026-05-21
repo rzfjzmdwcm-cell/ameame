@@ -10,23 +10,21 @@
   <link rel="canonical" href="https://niarlife.online/">
   <title>NIAR Portfolio</title>
 
-  <!-- <script>
-    const password = "1234";
-
-    const userInput = prompt("請輸入密碼");
-
-    if (userInput !== password) {
-      alert("密碼錯誤");
-      window.location.href = "https://google.com";
-    }
-  </script> -->
-
   <style>
+    :root {
+      --bg-color: #000;
+      --text-color: #fff;
+      --nav-bg: rgba(0, 0, 0, 0.62);
+      --accent-color: cyan;
+      --font-main: "Helvetica Neue", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      --transition-speed: 0.3s;
+    }
+
     body {
       margin: 0;
-      background: black;
-      color: white;
-      font-family: Arial;
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-family: var(--font-main);
       text-align: center;
     }
 
@@ -38,7 +36,7 @@
       justify-content: center;
       gap: 34px;
       padding: 20px;
-      background: rgba(0, 0, 0, 0.62);
+      background: var(--nav-bg);
       backdrop-filter: blur(14px);
       z-index: 1000;
     }
@@ -58,7 +56,8 @@
 
     .hero {
       height: 100vh;
-      background-image: url("https://picsum.photos/1200/800");
+      /* 建議將 placeholder 替換為你的代表作 */
+      background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url("image/japan1.png");
       background-size: cover;
       background-position: center;
 
@@ -151,6 +150,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
       gap: 20px;
+      background: var(--bg-color);
     }
 
     .gallery img {
@@ -216,9 +216,9 @@
   </section>
 
   <section class="gallery">
-    <img src="image/japan1.png">
-    <img src="image/japan2.png">
-    <img src="image/japan3.png">
+    <img src="image/japan1.png" alt="Japan Street Photography 1" loading="lazy">
+    <img src="image/japan2.png" alt="Japan Street Photography 2" loading="lazy">
+    <img src="image/japan3.png" alt="Japan Street Photography 3" loading="lazy">
   </section>
 
   <script>
