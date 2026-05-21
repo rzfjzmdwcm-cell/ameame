@@ -225,12 +225,33 @@
     const visitorCount = document.getElementById("visitor-count");
     const fallbackKey = "niar-home-local-views";
     const baseViews = 2343;
+    const hero = document.querySelector(".hero");
+    const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif"];
+    const imageFolderApi = "https://api.github.com/repos/rzfjzmdwcm-cell/rainzhu.github.io/contents/image";
 
     function showLocalViews() {
       const localViews = Number(localStorage.getItem(fallbackKey) || 0) + 1;
       localStorage.setItem(fallbackKey, localViews);
       visitorCount.innerText = `瀏覽數：${baseViews + localViews}`;
     }
+
+    // 隨機從作品夾中選取 Hero 背景圖
+    fetch(`${imageFolderApi}?t=${Date.now()}`)
+      .then(res => {
+        if (!res.ok) throw new Error("API error");
+        return res.json();
+      })
+      .then(files => {
+        const photos = files.filter(file => 
+          file.type === "file" && 
+          imageExtensions.some(ext => file.name.toLowerCase().endsWith(ext))
+        );
+        if (photos.length > 0) {
+          const randomPhoto = photos[Math.floor(Math.random() * photos.length)];
+          hero.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url("${randomPhoto.download_url}")`;
+        }
+      })
+      .catch(() => console.log("使用預設背景圖"));
 
     fetch("https://api.countapi.xyz/hit/niar-portfolio/home")
       .then(response => response.json())
